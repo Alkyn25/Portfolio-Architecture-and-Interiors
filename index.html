@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Flipbook — Portfolio</title>
+<style>
+body { margin:0; font-family:sans-serif; background:#111; color:white; display:flex; flex-direction:column; align-items:center; }
+#controls { margin:10px; }
+canvas { background:white; max-width:100%; height:auto; box-shadow:0 0 10px rgba(0,0,0,0.5); }
+button { margin:0 5px; padding:5px 10px; }
+</style>
+</head>
+<body>
+<h1>Portfolio Flipbook</h1>
+<div id="controls">
+  <button id="prev">◀</button>
+  <span id="pageInfo">- / -</span>
+  <button id="next">▶</button>
+</div>
+<canvas id="the-canvas"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+const url = '2508_Ali Koyun_Portfolio-Auszug_Web.pdf';
+let pdfDoc = null, pageNum = 1, scale = 1.2, canvas = document.getElementById('the-canvas'), ctx = canvas.getContext('2d');
+
+function renderPage(num) {
+  pdfDoc.getPage(num).then(function(page) {
+    const viewport = page.getViewport({scale: scale});
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    const renderContext = {
+      canvasContext: ctx,
+      viewport: viewport
+    };
+    page.render(renderContext);
+    document.getElementById('pageInfo').textContent = `${num} / ${pdfDoc.numPages}`;
+  });
+}
+
+function queueRenderPage(num) {
+  if (num < 1 || num > pdfDoc.numPages) return;
+  pageNum = num;
+  renderPage(pageNum);
+}
+
+document.getElementById('prev').addEventListener('click', () => queueRenderPage(pageNum - 1));
+document.getElementById('next').addEventListener('click', () => queueRenderPage(pageNum + 1));
+
+pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+  pdfDoc = pdfDoc_;
+  renderPage(pageNum);
+});
+</script>
+</body>
+</html>
